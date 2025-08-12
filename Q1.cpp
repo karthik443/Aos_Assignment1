@@ -33,24 +33,25 @@ bool isDirPresent(const char* filename){
 void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int end,string flagVal,int writeIdx) {
     try {
 
-
+        off_t localFileSize=filesize;
         if(end!=-2){       // I only traverse till given end of file. if set as -2 I will traverse till end;
             if(end>filesize){
+                cout<<filesize<<" - "<<end<<endl;
                 throw runtime_error("Given End is greater than file size.");
             }
-            filesize = end;
+            localFileSize = end;
             
         }
 //------------------------------------------------------------------------start core logic
         char * buffer = new char[chunkSize+1];
-        long long data_end_point = filesize;
+        long long data_end_point = localFileSize;
         long long dataToRead = data_end_point-data_st_point;
         while(dataToRead>0){
             size_t readSize = (dataToRead>=chunkSize)? chunkSize:dataToRead;
             totalRead += readSize;
-            double percent = (double(totalRead) / filesize) * 100.0;
-            
-            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%" << flush;
+            double percent = (double(totalRead*100) / filesize) ;
+
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
             data_end_point -=readSize;
             dataToRead = data_end_point-data_st_point;
 
@@ -87,12 +88,13 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
     try {
 
        
-        
+        off_t localFileSize=filesize;
         if(end!=-2){
             if(end>filesize){
-                    throw runtime_error("Given End is greater than file size.");
+                    cout<<filesize<<" - "<<end<<endl;
+                    throw runtime_error("Error , Given End is greater than file size.");
             }
-            filesize = end;
+            localFileSize = end;
         }
        
         //start core logic
@@ -102,13 +104,15 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
         long long remaining_fileData;
         float readSize;
 
-        while(currptr<filesize){
-            remaining_fileData = filesize-currptr;
+        while(currptr<localFileSize){
+            remaining_fileData = localFileSize-currptr;
             readSize = (remaining_fileData>=chunkSize)?chunkSize:remaining_fileData;
 
             totalRead += readSize;
-            double percent = (double(totalRead) / filesize) * 100.0;
-            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%" << flush;
+             double percent = (double(totalRead*100) / filesize) ;
+
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
+
             //move fd to current chunk piece
             if(lseek(fd,currptr,SEEK_SET)==-1){
                throw runtime_error("Error in lseek 2");  
@@ -134,7 +138,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
         
          //End core logic
     }catch (exception& e) {
-        cout << "Caught: " << e.what();
+        cout << "Exception: " << e.what();
     }
 
 }
@@ -161,10 +165,11 @@ int main(int argc, char* argv[]){
     filesize = lseek(fd,0,SEEK_END);
         if(filesize==-1){
             throw runtime_error("Error in Calculating filesize");
-    }
+        }
+        
     if(isDirPresent("Assignment1")){
             if(!dirFlag){
-                cout<<"Directory is present";
+                cout<<"Directory is present"<<endl;
                 dirFlag = true;
             }
         }else{
@@ -185,39 +190,45 @@ int main(int argc, char* argv[]){
 //------------------------------------------------------- start logic according to flags
     if(flag=="0"){
         if(argc!=4){
-            printError("Incorrect Input params");
-            return 0;
+             throw runtime_error("Incorrect Input params");
+            
         }
          blockSizeInput = argv[3];
         if(!isdigitChecker(blockSizeInput)){
-            cout<<"Pass a valid block size";
-            return 1;
+             throw runtime_error("Pass a valid block size");
+           
         }
         chunkSize = stoi(blockSizeInput);
         readFileInReverseChunks(fileName,chunkSize,0,-2,true,flag,0);
+        if(filesize==0){
+            cout<<"Empty File"<<endl;
+            cout<<"Progress: 100.00%"<<endl;
+        }
     }else if(flag=="1"){
          if(argc!=3){
-            printError("Incorrect Input params");
-            return 0;
+             throw runtime_error("Incorrect Input params");
         }
         TotalFileReverse(fileName,chunkSize,0,-2,flag,0);
+        if(filesize==0){
+            cout<<"Empty File"<<endl;
+            cout<<"Progress: 100.00%"<<endl;
+        }
         
     }else if(flag=="2"){
          if(argc!=5){
-            printError("Incorrect Input params");
-            return 0;
+             throw runtime_error("Incorrect Input params");
+      
         }
         string start = argv[3];
         string ending = argv[4];
         if(!isdigitChecker(start) || !isdigitChecker(ending)){
-            printError("Provide valid st & end Indices");
-            return 0;
+             throw runtime_error("Provide valid st & end Indices");
         }
         int st = stoi(start);
         int end =stoi(ending);
         if(st>end){
-            printError("start should be less than or equal to end");
-            return 0;
+            throw runtime_error("start should be less than or equal to end");
+           
         }
             TotalFileReverse(fileName,chunkSize,0,st,flag,0);
             readFileInReverseChunks( fileName,chunkSize,st,end+1,false,flag,st);
@@ -225,11 +236,10 @@ int main(int argc, char* argv[]){
     }
     
     else{
-        printError("Invalid Flag provided");
-        return 0;
+        throw runtime_error("Invalid Flag provided");
     }
 
-    cout<<"\nDone"<<endl;
+    cout<<"\nExecution Completed."<<endl;
     close(fd);
     close(fd2);
 //------------------------------------------------------- End logic according to flags
@@ -239,6 +249,6 @@ int main(int argc, char* argv[]){
     {
         close(fd);
         close(fd2);
-        cout<<e.what()<<endl;
+        cout<<"Exception: "<<e.what()<<endl;
     }
 }
