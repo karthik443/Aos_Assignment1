@@ -3,12 +3,15 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <cstring>
-
+#include <iomanip>
 using namespace std;
 
 bool dirFlag = false;
 
 int fd, fd2;
+long long totalRead=0;
+long long filesize;
+
 bool isdigitChecker(string blockSize){
     for(char ch:blockSize){
         if(!isdigit(ch))return false;
@@ -18,7 +21,7 @@ bool isdigitChecker(string blockSize){
 void printError(string e){
     cout<<e<<endl;
 }
-//function to check if directory is present
+//------------------------------------------function to check if directory is present
 bool isDirPresent(const char* filename){
     struct stat st;
     if(stat(filename,&st)==0){
@@ -27,44 +30,44 @@ bool isDirPresent(const char* filename){
     return false;
 }
 
-void TotalFileReverse(string filename, size_t chunkSize,int st, int end,string flagVal,int writeIdx) {
+void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int end,string flagVal,int writeIdx) {
     try {
 
 
-       
-        off_t filesize = lseek(fd,0,SEEK_END);
-        if(filesize==-1){
-            throw runtime_error("Error in Calculating filesize");
-        }
-        if(end!=-2){       // I only traverse till specified end of file. if set as -2 I will traverse till end;
+        if(end!=-2){       // I only traverse till given end of file. if set as -2 I will traverse till end;
             if(end>filesize){
                 throw runtime_error("Given End is greater than file size.");
             }
             filesize = end;
             
         }
-        
-        //start core logic
+//------------------------------------------------------------------------start core logic
         char * buffer = new char[chunkSize+1];
-        int remaining = filesize;
-        int diff = remaining-st;
-        while(diff>0){
-            size_t readSize = (diff>=chunkSize)? chunkSize:diff;
-            remaining -=readSize;
-            diff = remaining-st;
+        long long data_end_point = filesize;
+        long long dataToRead = data_end_point-data_st_point;
+        while(dataToRead>0){
+            size_t readSize = (dataToRead>=chunkSize)? chunkSize:dataToRead;
+            totalRead += readSize;
+            double percent = (double(totalRead) / filesize) * 100.0;
+            
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%" << flush;
+            data_end_point -=readSize;
+            dataToRead = data_end_point-data_st_point;
 
-            if(lseek(fd,remaining,SEEK_SET)==-1){
+            if(lseek(fd,data_end_point,SEEK_SET)==-1){
                 throw runtime_error("Error in lseek 2");  
             }
             memset(buffer,0,chunkSize+1);
             int readFilesize = read(fd,buffer,readSize);
-            //start buffer reversal
+
+//------------------------------------------------------------start buffer reversal
                 for(int i=0;i<readFilesize/2;i++){
                         char temp = buffer[i];
                         buffer[i]=buffer[readFilesize-i-1];
                         buffer[readFilesize-i-1]= temp;
                 }
-            //end buffer reversal 
+//------------------------------------------------------------end buffer reversal 
+
             int ack = write(fd2,buffer,readFilesize);
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
@@ -72,7 +75,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int st, int end,string f
 
         }
         
-         //End core logic
+//--------------------------------------------------------------End core logic
     }
    catch (exception& e) {
         cout << "Caught: " << e.what();
@@ -84,31 +87,29 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
     try {
 
        
-        off_t filesize = lseek(fd,0,SEEK_END);
-        if(filesize==-1){
-            throw runtime_error("Error in Calculating filesize");
-        }
+        
         if(end!=-2){
             if(end>filesize){
                     throw runtime_error("Given End is greater than file size.");
             }
             filesize = end;
         }
-
-
-        //end code to create new file 
-
+       
         //start core logic
 
         char * buffer = new char[chunkSize+1];
-        int currptr = st;
-        int remaining=0;
-        int readSize;
+        long long currptr = st;
+        long long remaining_fileData;
+        float readSize;
 
         while(currptr<filesize){
-            remaining = filesize-currptr;
-            readSize = (remaining>=chunkSize)?chunkSize:remaining;
-        
+            remaining_fileData = filesize-currptr;
+            readSize = (remaining_fileData>=chunkSize)?chunkSize:remaining_fileData;
+
+            totalRead += readSize;
+            double percent = (double(totalRead) / filesize) * 100.0;
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%" << flush;
+            //move fd to current chunk piece
             if(lseek(fd,currptr,SEEK_SET)==-1){
                throw runtime_error("Error in lseek 2");  
             }
@@ -116,7 +117,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             memset(buffer,0,chunkSize+1);
             
             int readFilesize = read(fd,buffer,readSize);
-            cout<<readFilesize<<" -readFilesize"<<endl;
+
             if(doReverse){
                 for(int i=0;i<readFilesize/2;i++){
                         char temp = buffer[i];
@@ -124,14 +125,13 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
                         buffer[readFilesize-i-1]= temp;
                 }
             }
-            // buffer[readFilesize]='\0';
+
             int ack = write(fd2,buffer,readFilesize);
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
             }
         }
         
-     
          //End core logic
     }catch (exception& e) {
         cout << "Caught: " << e.what();
@@ -143,8 +143,7 @@ int main(int argc, char* argv[]){
     {
        
     if(argc<3){
-        printError("Insufficient Input Params.");
-        return 0;
+        throw runtime_error("Insufficient Params");
     }
     string fileName = argv[1];
     string flag = argv[2];
@@ -154,14 +153,18 @@ int main(int argc, char* argv[]){
     string blockSizeInput = "10240";
     int chunkSize = stoi(blockSizeInput);
 
-    // open and store file descriptors
-     fd = open(fileName.c_str(),O_RDONLY);
+//----------------------------------------------open and store file descriptors
+    fd = open(fileName.c_str(),O_RDONLY);
         if(fd==-1){
             throw runtime_error("Error in opening input file");
     }
+    filesize = lseek(fd,0,SEEK_END);
+        if(filesize==-1){
+            throw runtime_error("Error in Calculating filesize");
+    }
     if(isDirPresent("Assignment1")){
             if(!dirFlag){
-                cout<<"Dir is present";
+                cout<<"Directory is present";
                 dirFlag = true;
             }
         }else{
@@ -177,7 +180,9 @@ int main(int argc, char* argv[]){
             throw runtime_error("Error in creating/opening new file");
             
     }  
-
+//------------------------------------------------------end to create file descriptors
+    totalRead=0;
+//------------------------------------------------------- start logic according to flags
     if(flag=="0"){
         if(argc!=4){
             printError("Incorrect Input params");
@@ -195,7 +200,6 @@ int main(int argc, char* argv[]){
             printError("Incorrect Input params");
             return 0;
         }
-        cout<<"Atleast I'm here"<<endl;
         TotalFileReverse(fileName,chunkSize,0,-2,flag,0);
         
     }else if(flag=="2"){
@@ -224,8 +228,12 @@ int main(int argc, char* argv[]){
         printError("Invalid Flag provided");
         return 0;
     }
+
+    cout<<"\nDone"<<endl;
     close(fd);
     close(fd2);
+//------------------------------------------------------- End logic according to flags
+
     }
     catch(const std::exception& e)
     {
