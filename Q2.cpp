@@ -50,7 +50,7 @@ void checkPermission(string inputFile,string filename){
              << (permisson & S_IXOTH ? "Yes" : "No") << "\n";
     } 
     else {
-        cout<<"Error in checking permissions";
+        cout<<"Error in checking permissions of "<<filename<<endl;
     }
 
     
@@ -71,7 +71,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
         off_t localFileSize=filesize;
         if(end!=-2){       // I only traverse till given end of file. if set as -2 I will traverse till end;
             if(end>filesize){
-                cout<<filesize<<" - "<<end<<endl;
+                // cout<<filesize<<" - "<<end<<endl;
                 throw runtime_error("Given End is greater than file size.");
             }
             localFileSize = end;
@@ -132,7 +132,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
         off_t localFileSize=filesize;
         if(end!=-2){
             if(end>filesize){
-                    cout<<filesize<<" - "<<end<<endl;
+                    // cout<<filesize<<" - "<<end<<endl;
                     throw runtime_error("Error , Given End is greater than file size.");
             }
             localFileSize = end;
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]){
 //----------------------------------------------open and store file descriptors
     fd = open(old_filePath.c_str(),O_RDONLY);
         if(fd==-1){
-            throw runtime_error("Error in opening input file");
+            throw runtime_error("Error in opening old file file");
     }
     filesize = lseek(fd,0,SEEK_END);
         if(filesize==-1){
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]){
     
     fd2 = open(new_filePath.c_str(),O_RDONLY);
     if(fd2==-1){
-            throw runtime_error("Error in creating/opening new file");
+            throw runtime_error("Error in opening new file");
             
     }  
     int filesize2 = lseek(fd2,0,SEEK_END);
@@ -243,7 +243,7 @@ int main(int argc, char* argv[]){
     if(filesize2==-2){
         throw runtime_error("Error in Calculating filesize");
     }
-    cout<<filesize<<" 1-2 "<<filesize2<<endl;
+    // cout<<filesize<<" 1-2 "<<filesize2<<endl;
     if(filesize!=filesize2){
         equalSize=false;
         fileMatch=false;
@@ -318,8 +318,11 @@ int main(int argc, char* argv[]){
     cout << "Directory is created : " << (dirFlag? "Yes" : "No") << "\n";
     cout <<"Whether file contents are correctly processed: "<< (fileMatch? "Yes" : "No") << "\n";
     cout<<"Both Files Sizes are Same: "<<(equalSize? "Yes" : "No") << "\n";
+    cout<<"\n";
     checkPermission(new_filePath,"newfile");
+    cout<<"\n";
     checkPermission(old_filePath,"oldfile");
+    cout<<"\n";
     checkPermission(directory_name,"directory");
     cout<<"\nExecution Completed."<<endl;
     close(fd);
