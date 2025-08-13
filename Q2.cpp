@@ -87,7 +87,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
             totalRead += readSize;
             double percent = (double(totalRead*100) / filesize) ;
 
-            // cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
+           
             data_end_point -=readSize;
             dataToRead = data_end_point-data_st_point;
 
@@ -105,7 +105,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
                         delete [] buffer2;
                         delete [] buffer;
 
-                        // throw runtime_error("Both files are not Matching");  
+                         
                         return;
                     }
                 }
@@ -132,7 +132,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
         off_t localFileSize=filesize;
         if(end!=-2){
             if(end>filesize){
-                    // cout<<filesize<<" - "<<end<<endl;
+                    
                     throw runtime_error("Error , Given End is greater than file size.");
             }
             localFileSize = end;
@@ -152,7 +152,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             totalRead += readSize;
              double percent = (double(totalRead*100) / filesize) ;
 
-            // cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
+            
 
             //move fd to current chunk piece
             if(lseek(fd,currptr,SEEK_SET)==-1){
@@ -181,7 +181,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
                         delete [] buffer2;
                         delete [] buffer;
                         return ;
-                        // throw runtime_error("Both files are not Matching");  
+                        //("Both files are not Matching");  
                     }
                 }
             }
@@ -211,8 +211,8 @@ int main(int argc, char* argv[]){
     if(stoi(flag)>2){
         throw runtime_error("Invalid Flag");
     }
-    string blockSizeInput = "10240";
-    int chunkSize = stoi(blockSizeInput);
+    string blockSizeInput ;
+     int chunkSize =  500 * 1024;
 
 //----------------------------------------------open and store file descriptors
     fd = open(old_filePath.c_str(),O_RDONLY);
