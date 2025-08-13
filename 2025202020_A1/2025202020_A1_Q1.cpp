@@ -48,11 +48,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
         long long dataToRead = data_end_point-data_st_point;
         while(dataToRead>0){
             size_t readSize = (dataToRead>=chunkSize)? chunkSize:dataToRead;
-            totalRead += readSize;
-            double percent = (double(totalRead*100) / filesize) ;
-
-            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
-            data_end_point -=readSize;
+             data_end_point -=readSize;
             dataToRead = data_end_point-data_st_point;
 
             if(lseek(fd,data_end_point,SEEK_SET)==-1){
@@ -73,6 +69,11 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
             }
+            totalRead += readSize;
+            double percent = (double(totalRead*100) / filesize) ;
+
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
+           
 
         }
         
@@ -108,11 +109,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             remaining_fileData = localFileSize-currptr;
             readSize = (remaining_fileData>=chunkSize)?chunkSize:remaining_fileData;
 
-            totalRead += readSize;
-             double percent = (double(totalRead*100) / filesize) ;
-
-            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
-
+           
             //move fd to current chunk piece
             if(lseek(fd,currptr,SEEK_SET)==-1){
                throw runtime_error("Error in lseek 2");  
@@ -134,6 +131,11 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
             }
+             totalRead += readSize;
+             double percent = (double(totalRead*100) / filesize) ;
+
+            cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
+
         }
         
          //End core logic
