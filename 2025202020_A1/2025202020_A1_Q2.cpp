@@ -158,11 +158,12 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             if(lseek(fd,currptr,SEEK_SET)==-1){
                throw runtime_error("Error in lseek 2");  
             }
-            currptr+=readSize;
+            
             memset(buffer,0,chunkSize+1);
             memset(buffer2,0,chunkSize+1);
             
             int readFilesize = read(fd,buffer,readSize);
+            currptr+=readFilesize;
             int readFilesize2 = read(fd2,buffer2,readSize);
             if(doReverse){
                 for(int i=0;i<readFilesize;i++){

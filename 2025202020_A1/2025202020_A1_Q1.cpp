@@ -36,7 +36,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
         off_t localFileSize=filesize;
         if(end!=-2){       // I only traverse till given end of file. if set as -2 I will traverse till end;
             if(end>filesize){
-                cout<<filesize<<" - "<<end<<endl;
+                // cout<<filesize<<" - "<<end<<endl;
                 throw runtime_error("Given End is greater than file size.");
             }
             localFileSize = end;
@@ -69,7 +69,7 @@ void TotalFileReverse(string filename, size_t chunkSize,int data_st_point, int e
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
             }
-            totalRead += readSize;
+            totalRead += readFilesize;
             double percent = (double(totalRead*100) / filesize) ;
 
             cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
@@ -92,7 +92,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
         off_t localFileSize=filesize;
         if(end!=-2){
             if(end>filesize){
-                    cout<<filesize<<" - "<<end<<endl;
+                    // cout<<filesize<<" - "<<end<<endl;
                     throw runtime_error("Error , Given End is greater than file size.");
             }
             localFileSize = end;
@@ -114,10 +114,11 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             if(lseek(fd,currptr,SEEK_SET)==-1){
                throw runtime_error("Error in lseek 2");  
             }
-            currptr+=readSize;
+            
             memset(buffer,0,chunkSize+1);
             
             int readFilesize = read(fd,buffer,readSize);
+            currptr+=readFilesize;
 
             if(doReverse){
                 for(int i=0;i<readFilesize/2;i++){
@@ -131,7 +132,7 @@ void readFileInReverseChunks(string filename, size_t chunkSize,int st, int end, 
             if(ack==-1){
                 throw runtime_error("Error in writing new file");  
             }
-             totalRead += readSize;
+             totalRead += readFilesize;
              double percent = (double(totalRead*100) / filesize) ;
 
             cout << "\rProgress: " << fixed << setprecision(2) << percent << "%     " << flush;
@@ -157,7 +158,8 @@ int main(int argc, char* argv[]){
         throw runtime_error("Invalid Flag");
     }
     string blockSizeInput ;
-    int chunkSize =  500 * 1024; // 512000
+    // int chunkSize =  500 * 1024; // 512000
+    int chunkSize =  50100;
 
 
 //----------------------------------------------open and store file descriptors
