@@ -154,8 +154,9 @@ int main(int argc, char* argv[]){
     if(stoi(flag)>2){
         throw runtime_error("Invalid Flag");
     }
-    string blockSizeInput = "10240";
-    int chunkSize = stoi(blockSizeInput);
+    string blockSizeInput ;
+    int chunkSize =  500 * 1024; // 512000
+
 
 //----------------------------------------------open and store file descriptors
     fd = open(fileName.c_str(),O_RDONLY);
